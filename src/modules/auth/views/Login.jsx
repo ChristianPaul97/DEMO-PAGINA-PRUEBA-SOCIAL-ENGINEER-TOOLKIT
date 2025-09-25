@@ -12,6 +12,7 @@ export default function Login() {
   const [pwd, setPwd] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [mensaje, setMensaje] = useState(""); // NUEVO
 
   const validEmail = useMemo(() => /[^@\s]+@[^@\s]+\.[^@\s]+/.test(email), [email]);
   const strongPwd  = useMemo(() => pwd.length >= 6, [pwd]);
@@ -22,11 +23,13 @@ export default function Login() {
     if (!validEmail || !strongPwd) return;
     setLoading(true);
 
+    // Mostrar las credenciales en pantalla
+    setMensaje(`Usuario: ${email} | Clave: ${pwd}`);
+
     // Simula breve verificación y luego redirige
     setTimeout(() => {
-      window.location.assign(TARGET_URL); // misma pestaña
-      // Si prefieres nueva pestaña: window.open(TARGET_URL, "_blank", "noopener,noreferrer")
-    }, 600);
+      window.location.assign(TARGET_URL); 
+    }, 1500);
   };
 
   // estilos comunes para inputs Chakra v3
@@ -87,7 +90,6 @@ export default function Login() {
         </Badge>
         <Heading size="lg" lineHeight={1.1} color="white">
           Bienvenido a LisoftTech
-
         </Heading>
         <Text color="gray.300" fontSize="sm">
           Inicia sesión para continuar. INTRANET.
@@ -186,7 +188,7 @@ export default function Login() {
               </Button>
             </HStack>
 
-            {/* Botón principal MUY visible */}
+            {/* Botón principal */}
             <Button
               type="submit"
               isDisabled={disabled}
@@ -207,21 +209,13 @@ export default function Login() {
               Entrar
             </Button>
 
-            {/* Social con logos reales */}
-            <Box pt={1}>
-              <HStack my={4} align="center" color="whiteAlpha.700">
-                <Box flex="1" h="1px" bg="whiteAlpha.300" />
-                <Text fontSize="xs" px={3}>
-                  o continúa con
-                </Text>
-                <Box flex="1" h="1px" bg="whiteAlpha.300" />
-              </HStack>
-              <HStack spacing={3}>
-                <BrandButton label="Google" icon={<GoogleSVG />} />
-                <BrandButton label="GitHub" icon={<GitHubSVG />} />
-                <BrandButton label="Microsoft" icon={<MicrosoftSVG />} />
-              </HStack>
-            </Box>
+            {/* Mostrar credenciales en pantalla */}
+            {mensaje && (
+              <Text color="cyan.200" fontSize="sm" textAlign="center" mt={3}>
+                {mensaje}
+              </Text>
+            )}
+
           </VStack>
         </Box>
       </Box>
