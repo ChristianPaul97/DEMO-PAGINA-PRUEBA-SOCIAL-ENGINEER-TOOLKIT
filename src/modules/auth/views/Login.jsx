@@ -25,7 +25,7 @@ export default function Login() {
 
     try {
       // 👉 Aquí se manda al backend Flask
-      const resp = await fetch("http://10.0.2.15:5000/login", {
+      const resp = await fetch("https://200033e90a62.ngrok-free.app/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password: pwd })
